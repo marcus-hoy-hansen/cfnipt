@@ -129,4 +129,7 @@ conda activate r_env
 
 Rscript -e "rmarkdown::render('reportgeneration.Rmd', output_format='pdf_document', output_file='${RESULTSFOLDER}/${FILEID}/intermediateOutput/${FILEID}_report.pdf', output_dir='${RESULTSFOLDER}/${FILEID}/intermediateOutput', params=list(fileid='${FILEID}'), intermediates_dir='${RESULTSFOLDER}/${FILEID}/rmd_tmp')" "$FILEID"
 
+
+
 mv *.log logs/.
+
