@@ -1,0 +1,33 @@
+# New-style profile for Snakemake ≥7/8
+executor: slurm
+
+# How many jobs Snakemake may submit concurrently to Slurm
+jobs: 5
+
+# Default resources if a rule doesn't set them explicitly
+default-resources:
+  - mem_mb=24000      # 24 GB per job (adjust to your norm)
+  - disk_mb=100000    # optional; some rules use it
+  - runtime=1440      # minutes; used by slurm executor to set --time
+
+# Handy global flags
+latency-wait: 120
+restart-times: 2
+keep-going: true
+use-conda: true
+
+
+# Slurm-specific configuration
+slurm:
+  # Extra sbatch args applied to every job (add your account/partition)
+  account: KGA
+  partition: normal
+  
+  # Optional defaults (executor derives --cpus-per-task from {threads})
+  job-name: "{rule}.{wildcards}"
+  #time-min: null       # or e.g. "00:30:00"
+  #qos: null
+  #constraint: null
+  # You can set a hard default walltime here too if you prefer:
+  # time: "1-00:00:00"
+

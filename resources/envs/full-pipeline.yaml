@@ -1,0 +1,10 @@
+name: nipt-full
+channels: [conda-forge, bioconda, r]
+dependencies:
+  - bowtie2
+  - samtools
+  - r-base
+  - r-rmarkdown
+  - pandoc
+  - r-tidyverse     # if your Rmd needs it
+
