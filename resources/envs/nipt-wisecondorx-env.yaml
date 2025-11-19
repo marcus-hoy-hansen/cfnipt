@@ -1,6 +1,0 @@
-name: nipt-wisecondorx
-channels:
-  - conda-forge
-  - bioconda
-dependencies:
-  - wisecondorx

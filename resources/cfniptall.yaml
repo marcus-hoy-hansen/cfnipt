@@ -1,6 +1,0 @@
-name: cfniptall
-channels:
-  - conda-forge
-  - bioconda
-  - genomedk
-prefix: /home/marcushh/miniforge3/envs/cfniptall
