@@ -1,0 +1,42 @@
+#!/bin/bash
+set -euo pipefail
+[[ $# -eq 2 ]] || { echo "Usage: $0 <in_dir> <out_dir>"; exit 1; }
+
+
+
+in="$(realpath "$1")"
+out="$(realpath -m "$2")"
+mkdir -p "$out"
+shopt -s nullglob
+
+# Find unique sample prefixes
+mapfile -t samples < <(printf '%s\n' "$in"/*_R1_001.fastq.gz \
+  | sed -E 's#.*/##; s/_L[0-9]{3}_R1_001\.fastq\.gz$//; s/_R1_001\.fastq\.gz$//' \
+  | sort -u)
+
+for s in "${samples[@]}"; do
+  dest="${out}/${s}.fastq.gz"
+  [[ -e "$dest" ]] && { echo "SKIP $dest"; continue; }
+
+  lanes=( "$in"/${s}_L???_R1_001.fastq.gz )
+  single="$in/${s}_R1_001.fastq.gz"
+
+  if (( ${#lanes[@]} > 1 )); then
+    echo "MERGE -> $dest"
+    printf '  + %s\n' "${lanes[@]}"
+    cat "${lanes[@]}" > "$dest"
+  elif [[ -e "${lanes[0]:-}" ]]; then
+    echo "COPY  -> $dest"
+    cp -p "${lanes[0]}" "$dest"
+  elif [[ -e "$single" ]]; then
+    echo "COPY  -> $dest"
+    cp -p "$single" "$dest"
+  else
+    echo "WARN  no files for ${s}"
+  fi
+done
+
+
+
+
+
