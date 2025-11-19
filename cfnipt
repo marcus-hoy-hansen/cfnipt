@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=cfNIPT_watch
-#SBATCH --account=KGA
+#SBATCH --account=
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=500M
 #SBATCH --time=1-00:30:00
