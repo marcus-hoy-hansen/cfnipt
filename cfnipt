@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=500M
 #SBATCH --time=1-00:30:00
-#SBATCH --output=logs/snakemake_watch-%j.out
+#SBATCH --output=resources/logs/snakemake_watch-%j.out
 #SBATCH --partition=normal
 
 set -euo pipefail
