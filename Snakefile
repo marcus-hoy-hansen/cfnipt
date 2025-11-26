@@ -8,7 +8,7 @@
 import os, glob, re
 
 # ====================== CONFIG (edit if needed) ===============================
-RUN_ID   = os.environ.get("RUN_ID", "*")   # include runs that have rawdata/<RUN>/.complete
+RUN_ID   = os.environ.get("RUN_ID", "*")
 THREADS  = 15
 ROOT     = workflow.basedir
 
@@ -33,6 +33,7 @@ ENV_FASTQC = "resources/envs/fastqc.yaml"         # fastqc
 # Prevent locale spam from R
 shell.prefix("set -euo pipefail; export LANG=C.UTF-8 LC_ALL=C.UTF-8; ")
 
+
 # =================== DEFAULT TARGET FIRST (no wildcards) ======================
 FINAL = []   # will be populated after sample discovery
 
@@ -40,8 +41,6 @@ rule all:
     input:
         lambda wc: FINAL
 # ==============================================================================
-
-
 
 
 # ==================== SIMPLE MULTI-SAMPLE + SINGLE-FILE DISCOVERY ============
@@ -96,12 +95,6 @@ SAMPLES = sorted({
 # Compatibility for concat_lanes logic
 RUN_DIRS = sorted(set(samples_ready.values()))
 # ==============================================================================
-
-
-
-
-
-
 
 
 # ======================= SIMPLE L001–L004 CONCAT ==============================
@@ -450,5 +443,3 @@ rule fastqc_stats:
         fastqc "{input}"; echo "{output}"
         """
 # ==============================================================================
-
-
