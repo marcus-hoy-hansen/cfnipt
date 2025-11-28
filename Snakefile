@@ -1,4 +1,4 @@
-# Snakefile — cfNIPT pipelinREF_FASTAe
+# Snakefile — cfNIPT pipeline
 # Bowtie2 → Picard → SeqFF → idxstats → Wisecondor → WisecondorX → Report
 # Usage:
 #   snakemake --use-conda --conda-frontend conda --cores 15 --rerun-incomplete --keep-going
@@ -8,7 +8,7 @@
 import os, glob, re
 
 # ====================== CONFIG (edit if needed) ===============================
-RUN_ID   = os.environ.get("RUN_ID", "*")
+RUN_ID   = os.environ.get("RUN_ID", "*")   # include runs that have rawdata/<RUN>/.complete
 THREADS  = 15
 ROOT     = workflow.basedir
 
@@ -33,7 +33,6 @@ ENV_FASTQC = "resources/envs/fastqc.yaml"         # fastqc
 # Prevent locale spam from R
 shell.prefix("set -euo pipefail; export LANG=C.UTF-8 LC_ALL=C.UTF-8; ")
 
-
 # =================== DEFAULT TARGET FIRST (no wildcards) ======================
 FINAL = []   # will be populated after sample discovery
 
@@ -41,6 +40,8 @@ rule all:
     input:
         lambda wc: FINAL
 # ==============================================================================
+
+
 
 
 # ==================== SIMPLE MULTI-SAMPLE + SINGLE-FILE DISCOVERY ============
@@ -163,6 +164,7 @@ for s in SAMPLES:
     ]
 # ==============================================================================
 
+#                      *** SNAKEMAKE RULES START ***
 
 # ========================= ALIGN → SORTED BAM =================================
 rule bowtie2_align_sort:
@@ -391,8 +393,14 @@ rule wisecondorx_gender:
 # =============================== REPORT (Rmd) =================================
 rule report_pdf:
     input:
-        "results/{sample}/intermediateOutput/{sample}.wisecondorx-b37_gender.txt",
-        "results/{sample}/intermediateOutput/{sample}.wisecondorx-b37_statistics.txt"
+        gender   = "results/{sample}/intermediateOutput/{sample}.wisecondorx-b37_gender.txt",
+        stats    = "results/{sample}/intermediateOutput/{sample}.wisecondorx-b37_statistics.txt",
+        seqff    = "results/{sample}/intermediateOutput/{sample}.seqff.txt",
+        idxstats = "results/{sample}/intermediateOutput/{sample}.bowtie2-b37-idxstats.txt",
+        wc_report= "results/{sample}/intermediateOutput/{sample}.wisecondor-bowtie2_b37-report.txt",
+        wc_plot  = "results/{sample}/intermediateOutput/{sample}-wisecondor-bowtie2_b37_z.pdf",
+        wc_cwz   = "results/{sample}/intermediateOutput/{sample}.wisecondor-bowtie2_b37_cwz.csv",
+        wcx_bed  = "results/{sample}/intermediateOutput/{sample}.wisecondorx-b37_aberrations.bed"
     output:
         "results/{sample}/intermediateOutput/{sample}_report.pdf"
     params:
@@ -443,3 +451,4 @@ rule fastqc_stats:
         fastqc "{input}"; echo "{output}"
         """
 # ==============================================================================
+
