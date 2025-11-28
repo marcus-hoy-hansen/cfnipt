@@ -1,52 +1,40 @@
 #!/bin/bash
 #SBATCH --job-name=cfNIPT_watch
-#SBATCH --account=
+##SBATCH --account=[accountname]
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=500M
-#SBATCH --time=1-00:30:00
-#SBATCH --output=resources/logs/snakemake_watch-%j.out
+#SBATCH --time=01:00:00
+#SBATCH --output=logs/snakemake_watch-%j.out
 #SBATCH --partition=normal
 
 set -euo pipefail
 umask 002
 
+INTERVAL="1hour"
+
 source "/home/$USER/miniforge3/etc/profile.d/conda.sh"
-conda activate snakemake_env
 
-echo "[INFO] Starting Snakemake watchdog $(date)"
-start_time=$(date +%s)
-max_runtime=$((24 * 3600))  # 24 hours
-
-run_snakemake() {
-  snakemake \
-    --profile resources/slurm \
-    --rerun-incomplete \
-    --use-conda \
-    --conda-frontend conda
-}
-
-if [[ $# -eq 0 ]]; then
-  echo "[INFO] No arguments given → running Snakemake once."
-  run_snakemake
-  echo "[INFO] Single run complete."
-  exit 0
-elif [[ "$1" == "--watch" ]]; then
-  echo "[INFO] Watch mode enabled — continuous loop."
-  while true; do
-    run_snakemake
-    sleep 3600
-    elapsed=$(( $(date +%s) - start_time ))
-    if (( elapsed > max_runtime )); then
-      echo "[INFO] Time exceeded — resubmitting new job."
-      sbatch "$0" --watch
-      exit 0
-    fi
-  done
-else
-  echo "[ERROR] Unknown argument: $1"
-  echo "Usage: $0 [--watch]"
-  exit 1
+# Check if snakemake is installed
+if ! conda env list | awk '{print $1}' | grep -qx snakemake_env; then
+  echo "[INFO] Creating conda env 'snakemake_env'"
+  conda create -y -n snakemake_env snakemake
 fi
 
+conda activate snakemake_env
 
+echo "[INFO] Snakemake pass started at $(date)"
+
+snakemake \
+  --profile resources/slurm \
+  --rerun-incomplete \
+  --use-conda \
+  --conda-frontend conda
+
+echo "[INFO] Snakemake pass finished at $(date)"
+
+# If called with --watch, resubmit itself
+if [[ "${1:-}" == "--watch" ]]; then
+  echo "[INFO] Scheduling next pass in $INTERVAL"
+  sbatch --begin=now+${INTERVAL} "${BASH_SOURCE[0]}" --watch
+fi
 
