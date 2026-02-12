@@ -20,7 +20,7 @@ use-conda: true
 # Slurm-specific configuration
 slurm:
   # Extra sbatch args applied to every job (add your account/partition)
-  account: KGA
+  account: [account]
   partition: normal
   
   # Optional defaults (executor derives --cpus-per-task from {threads})
