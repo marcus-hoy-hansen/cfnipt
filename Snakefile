@@ -132,6 +132,8 @@ rule concat_lanes:
     output:
         "results/{sample}/raw/{sample}.fastq.gz"
     threads: 1
+    resources:
+        mem_mb=1024
     shell:
         r"""
         mkdir -p "$(dirname {output})"
@@ -194,6 +196,8 @@ rule samtools_index:
     output:
         "results/{sample}/alignments/{sample}.bowtie2-b37.bam.bai"
     threads: 4
+    resources:
+        mem_mb=2048
     conda: ENV_BWA
     shell:
         r"""samtools index -@ {threads} "{input}" "{output}" """
@@ -203,7 +207,8 @@ rule samtools_index:
 # ============================== PICARD GC BIAS ================================
 rule picard_gc_bias:
     input:
-        "results/{sample}/alignments/{sample}.bowtie2-b37.bam"
+        bam = "results/{sample}/alignments/{sample}.bowtie2-b37.bam",
+        bai = "results/{sample}/alignments/{sample}.bowtie2-b37.bam.bai"
     output:
         "results/{sample}/intermediateOutput/{sample}.gc_bias_metrics.txt",
         "results/{sample}/intermediateOutput/{sample}.gc_bias_metrics.pdf",
@@ -211,12 +216,15 @@ rule picard_gc_bias:
     params:
         fasta = REF_FASTA,
         sif   = PICARD_SIF
+    threads: 1
+    resources:
+        mem_mb=4096
     shell:
         r"""
         mkdir -p "$(dirname {output[0]})"
         apptainer exec "{params.sif}" \
           picard CollectGcBiasMetrics \
-            -I "{input}" \
+            -I "{input.bam}" \
             -O "{output[0]}" \
             -CHART "{output[1]}" \
             -S "{output[2]}" \
@@ -228,18 +236,22 @@ rule picard_gc_bias:
 # ================================ SeqFF =======================================
 rule seqff:
     input:
-        "results/{sample}/alignments/{sample}.bowtie2-b37.bam"
+        bam = "results/{sample}/alignments/{sample}.bowtie2-b37.bam",
+        bai = "results/{sample}/alignments/{sample}.bowtie2-b37.bam.bai"
     output:
         "results/{sample}/intermediateOutput/{sample}.seqff.txt"
     params:
         tool = SEQFF_DIR,
         root = ROOT
     conda: ENV_SEQFF
+    threads: 2
+    resources:
+        mem_mb=24000
     shell:
         r"""
         mkdir -p "$(dirname {output})"
         cd "{params.tool}"
-        Rscript seqff.r -f "{params.root}/{input}" -o "{params.root}/{output}"
+        Rscript seqff.r -f "{params.root}/{input.bam}" -o "{params.root}/{output}"
         """
 # ==============================================================================
 
@@ -247,14 +259,18 @@ rule seqff:
 # ============================== samtools idxstats =============================
 rule samtools_idxstats:
     input:
-        "results/{sample}/alignments/{sample}.bowtie2-b37.bam"
+        bam = "results/{sample}/alignments/{sample}.bowtie2-b37.bam",
+        bai = "results/{sample}/alignments/{sample}.bowtie2-b37.bam.bai"
     output:
         "results/{sample}/intermediateOutput/{sample}.bowtie2-b37-idxstats.txt"
     conda: ENV_BWA
+    threads: 1
+    resources:
+        mem_mb=4048
     shell:
         r"""
         mkdir -p "$(dirname {output})"
-        samtools idxstats "{input}" > "{output}"
+        samtools idxstats "{input.bam}" > "{output}"
         """
 # ==============================================================================
 
@@ -262,7 +278,8 @@ rule samtools_idxstats:
 # ============================== WISECONDOR (py2) ==============================
 rule wisecondor_convert_b37:
     input:
-        "results/{sample}/alignments/{sample}.bowtie2-b37.bam"
+        bam = "results/{sample}/alignments/{sample}.bowtie2-b37.bam",
+        bai = "results/{sample}/alignments/{sample}.bowtie2-b37.bam.bai"
     output:
         "results/{sample}/alignments/{sample}.wisecondor-bowtie2_b37.npz"
     params:
@@ -272,7 +289,7 @@ rule wisecondor_convert_b37:
         r"""
         mkdir -p "$(dirname {output})"
         apptainer -q run --cleanenv "{params.sif}" \
-          convert "{input}" "{output}" -binsize {params.binsize}
+          convert "{input.bam}" "{output}" -binsize {params.binsize}
         """
 
 rule wisecondor_test_b37:
@@ -406,6 +423,9 @@ rule report_pdf:
     params:
         rmd = REPORT_RMD
     conda: ENV_R
+    threads: 1
+    resources:
+        mem_mb=2048
     shell:
         r"""
         mkdir -p "$(dirname {output})" "results/{wildcards.sample}/rmd_tmp" "{LOG_DIR}"
