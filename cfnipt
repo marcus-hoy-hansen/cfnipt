@@ -1,11 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=cfNIPT_watch
-##SBATCH --account=[accountname]
+#SBATCH --account=[accountname]
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=500M
-#SBATCH --time=01:00:00
+#SBATCH --time=12:00:00
 #SBATCH --output=logs/snakemake_watch-%j.out
 #SBATCH --partition=normal
+
 
 set -euo pipefail
 umask 002
@@ -17,7 +18,7 @@ source "/home/$USER/miniforge3/etc/profile.d/conda.sh"
 # Check if snakemake is installed
 if ! conda env list | awk '{print $1}' | grep -qx snakemake_env; then
   echo "[INFO] Creating conda env 'snakemake_env'"
-  conda create -y -n snakemake_env snakemake
+  conda create -y -n snakemake_env -c conda-forge python=3.11 snakemake=8.11.3 snakemake-executor-plugin-slurm
 fi
 
 conda activate snakemake_env
