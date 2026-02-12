@@ -550,13 +550,7 @@ if (nrow(wcx) == 0) {
 
 
 
-
-
-
-
 ```
-
-
 
 
 
@@ -721,3 +715,4 @@ mineffectsize: `r wisecondor_report_arguments_used_in_test$V2[which(wisecondor_r
 repeats: `r wisecondor_report_arguments_used_in_test$V2[which(wisecondor_report_arguments_used_in_test$V1=="repeats")]`  
 infile (for test): `r wisecondor_report_arguments_used_in_test$V2[which(wisecondor_report_arguments_used_in_test$V1=="infile")]`  
 multitest: `r wisecondor_report_arguments_used_in_test$V2[which(wisecondor_report_arguments_used_in_test$V1=="multitest")]`  
+
